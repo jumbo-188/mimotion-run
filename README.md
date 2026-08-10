@@ -21,6 +21,7 @@
   "TG_USER_ID": "telegram TG_USER_ID，如果没有，请留空",
   "SKEY": "酷推skey，如果没有，请留空",
   "SCKEY": "server酱sckey，如果没有，请留空",
+  "PUSHPLUSKEY": pushplus推送token，如果没有，请留空
   "POSITION": "是否开启企业微信推送，如果没有，请留空",
   "CORPID": "企业ID， 登陆企业微信，在我的企业-->企业信息里查看，如果没有，请留空",
   "CORPSECRET": "企业微信自建自建应用，每个自建应用里都有单独的secret，如果没有，请留空",
@@ -60,6 +61,7 @@
   "TG_USER_ID": "",
   "SKEY": "",
   "SCKEY": "",
+  "PUSHPLUSKEY": "",
   "POSITION": "",
   "CORPID": "",
   "CORPSECRET": "",

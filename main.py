@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 import requests, time, datetime, re, sys, os, json, random, math, traceback
-global skey,sckey,base_url,req_url,corpid,corpsecret,agentid,touser,toparty,totag,open_get_weather,area,qweather
+global skey,pushpluskey,sckey,base_url,req_url,corpid,corpsecret,agentid,touser,toparty,totag,open_get_weather,area,qweather
 
 class MiMotion():
     name = "小米运动"
@@ -44,6 +44,25 @@ class MiMotion():
             url = f'https://sctapi.ftqq.com/{sckey}.send'
             response = requests.post(url, data=postdata, verify=True)
             print(response)
+        except Exception as e:
+            error_traceback = traceback.format_exc()
+            print(error_traceback)
+
+    # 推送 push plus
+    def push_pushplus(self,desp=""):
+        try:
+            url = "https://www.pushplus.plus/send"
+            payload = json.dumps({
+                "token": {pushpluskey},
+                "title": "[小米运动步数修改]",
+                "content": desp,
+                "template": "html"
+            })
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload)
+            print(response.text)
         except Exception as e:
             error_traceback = traceback.format_exc()
             print(error_traceback)
@@ -341,6 +360,10 @@ if __name__ == "__main__":
         if datas.get("SCKEY"):
             sckey = datas.get("SCKEY")
             MiMotion(check_item=_check_item).push_wx(msg)
+        # 推送pushplus
+        if datas.get("PUSHPLUSKEY"):
+            pushpluskey = datas.get("PUSHPLUSKEY")
+            MiMotion(check_item=_check_item).push_pushplus(msg)
         # 推送telegram
         if datas.get("TG_BOT_TOKEN") or datas.get("TG_USER_ID") :
             tg_bot_token = datas.get("TG_BOT_TOKEN")
