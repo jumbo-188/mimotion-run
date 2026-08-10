@@ -52,12 +52,13 @@ class MiMotion():
     def push_pushplus(self,desp=""):
         try:
             url = "https://www.pushplus.plus/send"
-            payload = json.dumps({
-                "token": {pushpluskey},
+            data = {
+                "token": pushpluskey,
                 "title": "[小米运动步数修改]",
                 "content": desp,
                 "template": "html"
-            })
+            }
+            payload = json.dumps(data)
             headers = {
                 'Content-Type': 'application/json'
             }
