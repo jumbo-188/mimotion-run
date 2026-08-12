@@ -1,5 +1,11 @@
 # -*- coding: utf8 -*-
-import requests, time, datetime, re, sys, os, json, random, math, traceback
+import json
+import os
+import re
+import requests
+import time
+import traceback
+
 global skey,pushpluskey,sckey,base_url,req_url,corpid,corpsecret,agentid,touser,toparty,totag,open_get_weather,area,qweather
 
 class MiMotion():
@@ -51,14 +57,16 @@ class MiMotion():
     # 推送 push plus
     def push_pushplus(self,desp=""):
         try:
-            url = "https://www.pushplus.plus/send"
+            url = "https://www.pushplus.plus/batchSend"
             data = {
                 "token": pushpluskey,
                 "title": "[小米运动步数修改]",
                 "content": desp,
-                "template": "html"
+                "template": "html",
+                "channel": "app",
+                "topic": "mi_motion_run",
             }
-            payload = json.dumps(data)
+            payload = json.dumps(data).encode(encoding='utf-8')
             headers = {
                 'Content-Type': 'application/json'
             }
