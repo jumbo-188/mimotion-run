@@ -82,7 +82,8 @@ class MiMotion():
             payload = {
                 "title": "[小米运动步数修改]",
                 "body": desp,
-                "icon": "https://day.app/assets/images/avatar.jpg"
+                "icon": "https://day.app/assets/images/avatar.jpg",
+                "group": "小米运动"
             }
             resp = requests.post(url, json=payload, timeout=10)
             print("推送结果：", resp.json())
@@ -334,11 +335,11 @@ class MiMotion():
             res_json = resp.json()
             if res_json.get('message') == 'success':
                 msg = (f"帐号信息: {user[:4]}****{user[-4:]}\n"
-                       f"修改信息: success\n"
-                       f"修改步数: {step}\n")
+                       f"\t修改信息: success\n"
+                       f"\t修改步数: {step}\n")
             else:
                 msg = (f"帐号信息: {user[:4]}****{user[-4:]}\n"
-                       f"修改信息: 失败-{res_json}\n")
+                       f"\t修改信息: 失败-{res_json}\n")
         except Exception as e:
             error_traceback = traceback.format_exc()
             print(error_traceback)
