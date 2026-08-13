@@ -275,6 +275,7 @@ class MiMotion():
 
     def main(self):
         import time, random, math, traceback, requests, re
+        from datetime import datetime
 
         # ---------- 1. 获取步数比例 ----------
         try:
@@ -282,31 +283,79 @@ class MiMotion():
             password = str(self.check_item.get("password"))
             hea = {'User-Agent': 'Mozilla/5.0'}
             url = 'https://apps.game.qq.com/CommArticle/app/reg/gdate.php'  # 去空格
+            # 解析服务器时间
             r = requests.get(url, headers=hea, timeout=10)
-            if r.status_code != 200:
-                print(f'[步数比例] 状态码={r.status_code} 响应={r.text}')
-                hour = 12  # 给个默认值
+            # if r.status_code != 200:
+            #     print(f'[步数比例] 状态码={r.status_code} 响应={r.text}')
+            #     hour = 12  # 给个默认值
+            server_dt = None
+            if r.status_code == 200:
+                # reg = re.search(r'\d{4}-\d{2}-\d{2} (\d{2}):\d{2}:\d{2}', r.text)
+                # hour = int(reg.group(1)) if reg else 12
+                reg = re.search(r'(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):\d{2}', r.text)
+                if reg:
+                    year, mon, day, hh, mm = reg.groups()
+                    server_dt = datetime(int(year), int(mon), int(day), int(hh), int(mm))
+
+            # 接口失败兜底：使用本地时间
+            if server_dt is None:
+                server_dt = datetime.now()
+            # min_ratio = int(hour) / 22
+            # max_ratio = int(hour) / 21
+            # step_ratio = random.uniform(min_ratio, max_ratio)
+            # 转换为当日总分钟数
+            now_min = server_dt.hour * 60 + server_dt.minute
+            # 读取配置原始步数
+            raw_min_step = int(self.check_item.get("min_step", 10000))
+            raw_max_step = int(self.check_item.get("max_step", 19999))
+
+            if now_min < 360:
+                # ========== 00:00 ~ 05:59 凌晨时段 ==========
+                progress = now_min / 360
+                base = 50 + progress * 250
+                step_low = 50
+                step_high = min(round(base), 300)
+            elif 360 <= now_min <= 1320:
+                # ========== 06:00 ~ 22:00 白天主区间 ==========
+                total_min = 1320 - 360
+                progress = (now_min - 360) / total_min
+                base = raw_min_step + progress * (raw_max_step - raw_min_step)
+                # 基础上下小幅浮动 ±2%，和原有随机风格对齐
+                offset = base * 0.02
+                step_low = math.floor(base - offset)
+                step_high = math.ceil(base + offset)
             else:
-                reg = re.search(r'\d{4}-\d{2}-\d{2} (\d{2}):\d{2}:\d{2}', r.text)
-                hour = int(reg.group(1)) if reg else 12
-            min_ratio = int(hour) / 22
-            max_ratio = int(hour) / 21
-            step_ratio = random.uniform(min_ratio, max_ratio)
+                # ========== 22:01 ~ 23:59 晚间追加区间 ==========
+                total_min = 1440 - 1320
+                progress = (now_min - 1320) / total_min
+                extra_add = progress * 300
+                base = raw_max_step + extra_add
+                offset = base * 0.02
+                step_low = math.floor(base - offset)
+                step_high = math.ceil(base + offset)
+            # 容错：防止下限大于上限
+            if step_low > step_high:
+                step_low, step_high = step_high, step_low
         except Exception as e:
-            print('[步数比例] 异常:', e)
-            step_ratio = random.uniform(0.5, 0.9)
+            # print('[步数比例] 异常:', e)
+            # step_ratio = random.uniform(0.5, 0.9)
+            print(f'步数范围初始化失败: {e}，使用兜底默认区间')
+            # 兜底默认
+            step_low, step_high = 10000, 19999
+        # 生成最终步数
+        step = str(random.randint(step_low, step_high))
 
         # ---------- 2. 计算步数范围 ----------
-        try:
-            min_step = math.ceil(int(self.check_item.get("min_step", 10000)) * step_ratio)
-            max_step = math.ceil(int(self.check_item.get("max_step", 19999)) * step_ratio)
-            if min_step > max_step:
-                min_step, max_step = max_step, min_step
-        except Exception as e:
-            print(f'步数范围初始化失败: {e}，使用默认值')
-            min_step, max_step = 10000, 19999
-
-        step = str(random.randint(min_step, max_step))
+        # try:
+        #     min_step = math.ceil(int(self.check_item.get("min_step", 10000)) * step_ratio)
+        #     max_step = math.ceil(int(self.check_item.get("max_step", 19999)) * step_ratio)
+        #     if min_step > max_step:
+        #         min_step, max_step = max_step, min_step
+        # except Exception as e:
+        #     print(f'步数范围初始化失败: {e}，使用默认值')
+        #     min_step, max_step = 10000, 19999
+        #
+        # step = str(random.randint(min_step, max_step))
 
         # ---------- 3. 登录 ----------
         login_token, userid, app_token = self.login(user, password)
