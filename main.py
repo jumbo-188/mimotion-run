@@ -6,7 +6,7 @@ import requests
 import time
 import traceback
 
-global skey,pushpluskey,sckey,base_url,req_url,corpid,corpsecret,agentid,touser,toparty,totag,open_get_weather,area,qweather
+global skey,pushpluskey,barkkey,sckey,base_url,req_url,corpid,corpsecret,agentid,touser,toparty,totag,open_get_weather,area,qweather
 
 class MiMotion():
     name = "小米运动"
@@ -72,6 +72,20 @@ class MiMotion():
             }
             response = requests.request("POST", url, headers=headers, data=payload)
             print(response.text)
+        except Exception as e:
+            error_traceback = traceback.format_exc()
+            print(error_traceback)
+
+    def push_bark(self,desp=""):
+        try:
+            url = f"https://api.day.app/{barkkey}"
+            payload = {
+                "title": "[小米运动步数修改]",
+                "body": desp,
+                "icon": "https://day.app/assets/images/avatar.jpg"
+            }
+            resp = requests.post(url, json=payload, timeout=10)
+            print("推送结果：", resp.json())
         except Exception as e:
             error_traceback = traceback.format_exc()
             print(error_traceback)
@@ -373,6 +387,10 @@ if __name__ == "__main__":
         if datas.get("PUSHPLUSKEY"):
             pushpluskey = datas.get("PUSHPLUSKEY")
             MiMotion(check_item=_check_item).push_pushplus(msg)
+        # 推送bark
+        if datas.get("BARKKEY"):
+            barkkey = datas.get("BARKKEY")
+            MiMotion(check_item=_check_item).push_bark(msg)
         # 推送telegram
         if datas.get("TG_BOT_TOKEN") or datas.get("TG_USER_ID") :
             tg_bot_token = datas.get("TG_BOT_TOKEN")
